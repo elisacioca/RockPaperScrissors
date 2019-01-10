@@ -228,6 +228,21 @@ namespace RockPaperScrissors
             return -1;
         }
 
+        public static int GenerateMoveMedium(string path)
+        {
+            string[] lines = System.IO.File.ReadAllLines(path);
+            int x = Int32.Parse(lines[0]); //rock
+            int y = Int32.Parse(lines[1]); //paper
+            int z = Int32.Parse(lines[2]); //scissors
+            int total = x + y + z;
+
+            Random rnd = new Random();
+            int probability = rnd.Next(0, total);
+
+            if (probability <= x) return 1;
+            else if (probability <= x + y) return 2;
+            else return 3;
+        }
         //cu random
         public static void EasyStrategy(string path)
         {
@@ -284,9 +299,57 @@ namespace RockPaperScrissors
         }
 
         //cu random si anticipare cu o anumita probabilitate - statistici pe user
-        public static void MediumStrategy()
+        public static void MediumStrategy(string path)
         {
+            int round = 0;
+            int player2_move;
+            while (!IsFinal(round))
+            {
+                string move;
+                Console.WriteLine("\nRock? (r) Paper? (p) Scrissors? (s)");
+                player2_move = GenerateMoveMedium(path);
 
+                move = Console.ReadLine();
+                if (move != "s" && move != "p" && move != "r")
+                {
+                    Console.WriteLine("Invalid move!");
+                    continue;
+                }
+                UpdateMove(path, move, round);
+
+                string move2 = "";
+                if (player2_move == 1) move2 = "r";
+                if (player2_move == 2) move2 = "p";
+                if (player2_move == 3) move2 = "s";
+
+                Console.WriteLine("Your oponent's move: " + move2);
+
+                int player1_move = 0;
+                if (move == "r") player1_move = 1;
+                if (move == "p") player1_move = 2;
+                if (move == "s") player1_move = 3;
+
+                int winner = WhoIsWinner(player1_move, player2_move);
+                if (winner != 0)
+                {
+                    Transition(round, winner, player1_move, player2_move);
+                    states[round].move_player2 = player2_move;
+                    Console.WriteLine("Runda " + (round + 1) + " a fost castigata de " + winner);
+                }
+                if (winner == 0)
+                {
+                    Console.WriteLine("Aceasta runda s-a incheiat in remiza");
+                    if (round != 0)
+                    {
+                        states[round].score_player1 = states[round - 1].score_player1;
+                        states[round].score_player2 = states[round - 1].score_player2;
+                    }
+
+                }
+
+                Console.WriteLine("Scorul curent este: " + states[round].score_player1 + " la " + states[round].score_player2);
+                round++;
+            }
         }
 
         //patterns and probs
@@ -459,7 +522,7 @@ namespace RockPaperScrissors
             }
 
             if (difficulty == "e") EasyStrategy(path);
-            if (difficulty == "m") MediumStrategy();
+            if (difficulty == "m") MediumStrategy(path);
             if (difficulty == "h") HardStrategy(path);
 
             return 1;
